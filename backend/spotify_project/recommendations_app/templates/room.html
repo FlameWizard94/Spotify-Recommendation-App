@@ -1,0 +1,45 @@
+{% extends 'base.html' %} 
+
+{% block content %}
+
+<div class="container room-lobby-container">
+    
+    <div class="room-header">
+        <h2 class="room-title">Room: {{ room.room_code }}</h2>
+        
+        <div class="button-group">
+            <a href="" class="btn-reset room-btn">Refresh</a>
+            <a href="{% url 'spotify_group_rec' %}" class="btn-red room-btn">Exit</a>
+            <a href="{% url 'generate_room_mix' room.room_code %}" class="btn-submit room-btn">Generate Mix</a>
+        </div>
+    </div>
+
+    <h3 style="color: #191414;">Participants</h3>
+    
+    <div class="participant-list">
+        
+        <div>
+            {% if room.host.image %}
+                <img src="{{ room.host.image }}" alt="Host" class="host-img">
+            {% else %}
+                <div class="host-img placeholder-img"></div>
+            {% endif %}
+            <p style="margin-top: 8px;"><strong>{{ room.host.name }} (Host)</strong></p>
+        </div>
+
+        {% for friend in friends %}
+            <div>
+                {% if friend.image %}
+                    <img src="{{ friend.image }}" alt="{{ friend.name }}" class="friend-img">
+                {% else %}
+                    <div class="friend-img placeholder-img"></div>
+                {% endif %}
+                <p style="margin-top: 8px;">{{ friend.name }}</p>
+            </div>
+        {% empty %}
+            <p style="color: #6c757c; font-style: italic;">Waiting for friends to join...</p>
+        {% endfor %}
+
+    </div>
+</div>
+{% endblock %}

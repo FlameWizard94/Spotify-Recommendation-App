@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container">
+    <div class="home-wrapper">
+        
+        <br>
+        <h1 class="home-title">Music Discovery Hub</h1>
+        <p class="home-subtitle">Discover new music for yourself, or join a room to build a shared playlist with your friends!</p>
+
+        <div class="feature-card">
+            <h3 class="feature-title">Community Explorer</h3>
+            <p class="feature-text">Connect with other users on the app to share listening tastes and build your network.</p>
+            <p style="margin-bottom: 0;"><a class="link" href="{% url 'search_page' %}">→ Find Other Users</a></p>
+        </div>
+
+        <div class="feature-card">
+            <h3 class="feature-title">Your Soundtrack</h3>
+            <p class="feature-text">Generate custom song recommendations based on your presets/preferences.</p>
+            <p style="margin-bottom: 0;"><a class="link" href="{% url 'recommendation_page' %}">→ Get Individual Recommendations</a></p>
+        </div>
+
+        <div class="feature-card">
+            <h3 class="feature-title">Group Listening</h3>
+            <p class="feature-text">Mix your music with others. Start a live room code session with your friends or combine your saved preferences with the people you follow.</p>
+            <p style="margin-bottom: 0;"><a class="link" href="{% url 'group_recommendation_page' %}">→ Mix with Followers</a></p>
+            <p style="margin-bottom: 10px;"><a class="link" href="{% url 'spotify_group_rec' %}">→ Host / Join Live Group Rooms</a></p>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}

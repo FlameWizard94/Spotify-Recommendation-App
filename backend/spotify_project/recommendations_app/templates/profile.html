@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load humanize %}
+{% load static %}
+<div class="container">
+    <h1>Your Spotify Profile</h1>
+    
+    {% if user %}
+    <div class="artist-info">
+        <img src="{% if user.image %}{{ user.image }}{% else %}{% static 'images/default_icon.png' %}{% endif %}" alt="{{ user.name }}" 
+             class="artist-image" style="border-radius: 50%;">
+        
+        <h2>{{ user.name }}</h2>
+        
+        <p><strong>Email:</strong> {{ user.email|default:"Not provided" }}</p>
+        <p><strong>Spotify Followers:</strong> {{ user.data.followers.total|default:0|intcomma }}</p>
+        <p><strong>Country:</strong> {{ user.data.country|default:"Not specified" }}</p>
+        <p><strong>Account Type:</strong> {{ user.data.product|title|default:"Not specified" }}</p>
+        
+        {% if user.data.external_urls.spotify %}
+        <p><strong>Spotify Profile:</strong> 
+            <a href="{{ user.data.external_urls.spotify }}" target="_blank" style="color: #1DB954;">
+                Open in Spotify
+            </a>
+        </p>
+        {% endif %}
+        <form action="{% url 'spotify_login' %}">
+            {% csrf_token %}
+            <button class='btn-submit' type="submit">Update Details</button>
+        </form>
+        <form action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button class='btn-red' type="submit">Logout</button>
+        </form>
+    </div>
+    <div class='form-container'>
+        <h2><a class='link' href='{% url 'manage_following' %}?next={{ request.path }}'>People you follow</a></h2>
+    </div>
+
+    <br>
+    <h2> Visibility </h2>
+
+    <form class='recommendation-form' action="{% url 'change_visibility' %}" method="POST">
+        <div class="form-group">
+            {% csrf_token %}
+            <label for="visibility">Set visibility:</label>
+            <select name="visibility" id="visibility" class="form-select">
+                {% for visibility in visibilities %}
+                    <option value="{{ visibility }}"
+                        {% if visibility == user.visibility|default:'public' %}selected{% endif %}>
+                        {{ visibility|title }}</option>
+                {% endfor %}
+            </select>
+            <small class="form-help">Public, anyone on this website can search for and see your details.<br>
+                                     Following, only those who you follow can find you.<br>
+                                     Private, no one can see your details.<br>
+            </small>
+        </div>
+            <button type="submit" class="btn-submit">Update Visibility</button>
+    </form>
+
+    <br><br>
+
+    <div class='form-container'>
+        <h2><a class='link' href='{% url 'presets' %}?next={{ request.path }}'>Edit Presets</a></h2>
+    </div>
+
+    <div class='form-container'>
+        <h2> Update Your Preferences </h2>
+        <form class='recommendation-form' action="{% url 'set_preferences' %}" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="artists">Preferred Artists:</label>
+                <input type="text" name="artists" id="artist" class="form-input" 
+                       value="{{ user.preferences.fav_artists|default:'' }}"
+                       placeholder='{{ user.preferences.fav_artists }}'/>
+                <small class="form-help">For multiple artists, seperate them with commas, e.g. Lady Gaga, Kendrick Lamar (optional)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="genres">Preferred Genres:</label>
+                <input type="text" name="genres" id="genres" class="form-input" 
+                       value="{{ user.preferences.fav_genres|default:'' }}"
+                       placeholder='{{ user.preferences.fav_genres }}'/>
+                <small class="form-help">For multiple genres, seperate them with commas</small>
+            </div>
+
+            <div class="form-group">
+                <label for="num_tracks">Number of Recommendations:</label>
+                <input name="num_tracks" type="number" step="1" min="1" max="50" 
+                       value="{{ user.preferences.fav_num_tracks|default:'10' }}" class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label for="ranking">Preferred ranking:</label>
+                <select name="ranking" id="ranking" class="form-select">
+                    {% for ranking in rankings %}
+                        <option value="{{ ranking }}"
+                            {% if ranking == user.preferences.fav_ranking|default:'most popular' %}selected{% endif %}>
+                            {{ ranking|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">Update Preferences</button>
+                <button type="reset" class="btn-reset">Clear Form</button>
+            </div>
+        </form>
+
+    </div>
+
+    
+    {% else %}
+    <div class="error">
+        No profile data available.
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

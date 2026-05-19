@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load humanize %}
+{% load static %}
+<div class="container">
+    
+    {% if profile %}
+    <h1>{{ profile.name }}</h1>
+    <div class="artist-info">
+        <img src="{% if profile.image %}{{ profile.image }}{% else %}{% static 'images/default_icon.png' %}{% endif %}" alt="{{ profile.name }}" 
+             class="artist-image" style="border-radius: 50%;">
+        
+        <p><strong>Email:</strong> {{ profile.email|default:"Not provided" }}</p>
+        <p><strong>Spotify Followers:</strong> {{ profile.data.followers.total|default:0|intcomma }}</p>
+        <p><strong>Country:</strong> {{ profile.data.country|default:"Not specified" }}</p>
+        <p><strong>Account Type:</strong> {{ profile.data.product|title|default:"Not specified" }}</p>
+        
+        {% if profile.data.external_urls.spotify %}
+        <p><strong>Spotify Profile:</strong> 
+            <a href="{{ profile.data.external_urls.spotify }}" target="_blank" style="color: #1DB954;">
+                Open in Spotify
+            </a>
+        </p>
+        {% endif %}
+
+        {% if profile.spotify_id in user.following %}
+            <p><a class='link' href='{% url 'follow' profile.spotify_id %}?next={{ request.path }}'>Click to unfollow</a></p>
+        {% else %}
+            <p><a class='link' href='{% url 'follow' profile.spotify_id %}?next={{ request.path }}'>Click to follow</a></p>
+        {% endif %}
+    </div>
+
+    {% else %}
+    <div class="error">
+        No profile data available.
+    </div>
+    {% endif %}
+
+    {% if profile.visibility == 'public' or profile.visibility == 'following' and user.spotify_id in profile.following %}
+        {% if profile.presets %}
+            <h2> Presets </h2>
+            {% for name, preset_data in profile.presets.items %}
+            <div class="preset_card">
+                <h2> {{ name }} </h2>
+                <p><strong> Artists: </strong> {{ preset_data.artists }} </p>
+                <p><strong> Genres: </strong> {{ preset_data.genres }} </p>
+                <p><strong> Num Recommendations: </strong> {{ preset_data.num_tracks }} </p>
+                <p><strong> Ranking Type: </strong> {{ preset_data.ranking }} </p>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endif %}
+</div>
+
+<p> {{ context }} </p>
+{% endblock %}

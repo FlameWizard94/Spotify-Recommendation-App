@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% load static %}
+<div class='container'>
+    <h2> Profile Search page 
+        <div class="search-bar">
+            <form action="{% url 'search_page' %}" method='POST'>
+            {% csrf_token %}
+                <input class="form-input" type="text" placeholder="Search a user's name or id" name="term", required>
+                <button class="btn-submit" type="submit">Search</button>
+            </form>
+        </div>
+    </h2>
+    
+
+    {% for profile in profiles %}
+        {% if profile.visibility == 'public' or profile.visibility == 'following' and user.spotify_id in profile.following %}
+            <div class='profile_card'>
+                <img src="{% if profile.image %}{{ profile.image }}{% else %}{% static 'images/default_icon.png' %}{% endif %}" 
+                     alt="{{ profile.name }}" 
+                     class="search-image" style="border-radius: 50%;">
+                <h2> {{ profile.name }}</h2>
+
+                {% if profile.preferences %}
+                    <h4 style=" margin-bottom: 0"> <strong> Preferences: </strong> </h4>
+                    <ul style="margin-top: 0 margin-bottom: 20px">
+                        <li> <strong> Fav artists: </strong> {{profile.preferences.fav_artists}} </li>
+                        <li> <strong> Fav genres: </strong> {{profile.preferences.fav_genres }} </li>
+                        <li> <strong> Preferred ranking: </strong> {{profile.preferences.fav_ranking}} </li>
+                    </ul>
+                {% else %}
+                    <p style="font-size: 21"> <strong> Preferences: </strong> <br> None </p>
+                {% endif %}
+                
+
+                <p><a class='link' href='{% url 'view_profile' profile.spotify_id %}?next={{ request.path }}'> View Profile </a></p>
+
+                {% if profile.spotify_id in user.following %}
+                    <p><a class='link' href='{% url 'follow' profile.spotify_id %}?next={{ request.path }}'>Click to unfollow</a></p>
+                {% else %}
+                    <p><a class='link' href='{% url 'follow' profile.spotify_id %}?next={{ request.path }}'>Click to follow</a></p>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>
+
+{% endblock %}

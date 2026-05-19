@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container">
+    <div class='form-container'>
+        <h2> Add a Preset </h2>
+        <form class='recommendation-form' action="{% url 'presets' %}" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="preset-name">Preset Name:</label>
+                <input type="text" 
+                    id="preset-name" 
+                    name="name" 
+                    class="form-input"
+                    list="preset-suggestions"
+                    autocomplete="off"
+                    placeholder="Type to see existing presets...">
+                <datalist id="preset-suggestions">
+                {% for name, preset_data in user.presets.items %}
+                    <option value="{{ name }}">
+                {% endfor %}
+                </datalist>
+                <small class="form-help">If you enter the name of a preset that exists, it'll be updated</small>
+            </div>
+
+            <div class="form-group">
+                <label for="artists">Preset's Artists:</label>
+                <input type="text" name="artists" id="artist" class="form-input" 
+                        value="{{ user.preferences.fav_artists|default:'' }}"
+                        placeholder='{{ user.preferences.fav_artists }}'/>
+                <small class="form-help">For multiple artists, seperate them with commas, e.g. Lady Gaga, Kendrick Lamar (optional)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="genres">Preset's Genres:</label>
+                <input type="text" name="genres" id="genres" class="form-input" 
+                        value="{{ user.preferences.fav_genres|default:'' }}"
+                        placeholder='{{ user.preferences.fav_genres }}'/>
+                <small class="form-help">For multiple genres, seperate them with commas</small>
+            </div>
+
+            <div class="form-group">
+                <label for="num_tracks">Number of Recommendations:</label>
+                <input name="num_tracks" type="number" step="1" min="1" max="50" 
+                        value="{{ user.preferences.fav_num_tracks|default:'10' }}" class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label for="ranking">Preset's ranking:</label>
+                <select name="ranking" id="ranking" class="form-select">
+                    {% for ranking in rankings %}
+                        <option value="{{ ranking }}"
+                            {% if ranking == user.preferences.fav_ranking|default:'most popular' %}selected{% endif %}>
+                            {{ ranking|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">Add Preset</button>
+                <button type="reset" class="btn-reset">Clear Form</button>
+            </div>
+        </form>
+
+    </div>
+
+    <br>
+
+    {% if user.presets %}
+        <h2> Your Current Presets </h2>
+        {% for name, preset_data in user.presets.items %}
+        <div class="preset_card">
+            <h2> {{ name }} </h2>
+            <p><strong> Artists: </strong> {{ preset_data.artists }} </p>
+            <p><strong> Genres: </strong> {{ preset_data.genres }} </p>
+            <p><strong> Num Recommendations: </strong> {{ preset_data.num_tracks }} </p>
+            <p><strong> Ranking Type: </strong> {{ preset_data.ranking }} </p>
+            <p><a href="{% url 'delete_preset' name %}?next={{ request.path }}" class="delete">Delete Preset</a></p>
+        </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+{% endblock %}

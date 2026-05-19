@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container">
+    <h1 id="recommendations" >Music Recommendations</h1>
+    <p><a class='link' href="{% url 'group_recommendation_page' %}?next={{ request.path }}">Group Recommendations Page</a></p>
+
+    {% if got_recommended %}
+        {% if recommendations %}
+            <div class="recommendations-container">
+                <a class="link" href="#form_part">To form</a>
+
+                <div class="recommendations-header">
+                    <h2> Recommendations </h2>
+                </div>
+
+                {% for track in recommendations %}
+                <div class="recommendation_card">
+                    <div class="track_heading">
+                        <h3> {{ forloop.counter }}. {{ track.name }} </h3>
+                    </div>
+
+                    {% if track.album.images %}
+                    <img src="{{ track.album.images.0.url }}" 
+                        alt="{{ track.album.name }} album cover"
+                        class="album_art">
+                    {% endif %}
+
+                    <div class="track_details">
+                        <p><strong>Artists:</strong> 
+                            {% for artist in track.artists %}
+                                {{ artist.name }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </p>
+                        <p > <strong> Album: </strong> {{ track.album.name }}</p>
+                        <p> <strong> Explicit: </strong> {{ track.explicit }} </p>
+                        <p> <a href="{{ track.external_urls.spotify }}" class="link"> Open in Spotify </a></p>
+                    </div>
+
+                </div>
+                {% endfor %}
+
+            </div>
+        {% endif %}
+    {% endif %}
+
+    <br id="form_part">
+    {% if user.presets %}
+        {% if got_recommended %}
+            <a class="link" href="#recommendations">To recommendations</a><br>
+        {% endif %}
+        <div class="form-container">
+            <h2> Recommendations by preset </h2>
+            <form class="recommendation-form" action="{% url 'get_recommendation' %}" method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="preset">Preset:</label>
+                    <select name="preset" id="preset" class="form-select">
+                        <option value="">-- Select a preset --</option>
+                        {% for name, preset_data in user.presets.items %}
+                            <option value="{{ name }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn-submit">Get Recommendations</button>
+            </form>
+        </div>
+    {% endif %}
+    
+    
+    <div class="form-container">
+        <h2> Regular Recommendations </h2>
+        <form class="recommendation-form" action="{% url 'get_recommendation' %}" method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="artists">Preferred Artists:</label>
+                <input type="text" name="artists" id="artist" class="form-input"/>
+                <small class="form-help">For multiple artists, seperate them with commas, e.g. Lady Gaga, Kendrick Lamar (optional)</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="genre">Preferred Genre:</label>
+                <select name="genre" id="genre" class="form-select">
+                    <option value="">-- Select a genre --</option>
+                    {% for genre in genres %}
+                        <option value="{{ genre }}">{{ genre|title }}</option>
+                    {% endfor %}
+                </select>
+                <small class="form-help">Select one or more genres</small>
+            </div>
+
+            <div class="form-group">
+                <label for="multiple-genres">Multiple Genres (optional):</label>
+                <select name="multiple_genres" id="multiple-genres" class="form-select" multiple size="5">
+                    {% for genre in genres %}
+                        <option value="{{ genre }}">{{ genre|title }}</option>
+                    {% endfor %}
+                </select>
+                <small class="form-help">Hold Ctrl/Cmd to select multiple genres</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="num_tracks">Number of Recommendations:</label>
+                <input name="num_tracks" type="number" step="1" min="1" max="50" value="10" class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label for="ranking">Rank by:</label>
+                <select name="ranking" id="ranking" class="form-select">
+                    {% for ranking in rankings %}
+                        <option value="{{ ranking }}"
+                            {% if ranking == "most popular" %}selected{% endif %}>
+                            {{ ranking|title }}</option>
+                    {% endfor %}
+                </select>
+                <small class="form-help">How tracks are ranked, default is popularity</small>
+            </div>
+
+            
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">Get Recommendations</button>
+                <button type="reset" class="btn-reset">Clear Form</button>
+            </div>
+        </form>
+    </div>
+    
+</div>
+
+
+{% endblock %}

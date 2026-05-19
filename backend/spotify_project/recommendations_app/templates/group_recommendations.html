@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container">
+    <h1 id="recommendations" >Group Recommendations</h1>
+
+    <div class="form-container">
+        <h2> Preferences </h2>
+        <form class="recommendation-form" action="{% url 'get_group_recommendation' %}" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="preferences">Preferences:</label>
+                <select name="preferences" id="preferences" class="form-select" multiple size="5">
+                    <option value="{{ user.spotify_id }}">{{ user.name }} (you) </option>
+                    {% for name, id in following.items %}
+                        <option value="{{ id }}">{{ name }}</option>
+                    {% endfor %}
+                </select>
+                <small class="form-help">Hold Ctrl/Cmd to select multiple preferences </small>
+            </div>
+
+            <div class="form-group">
+                <label for="presets">Presets:</label>
+                <select name="presets" id="presets" class="form-select" multiple size="5">
+                    {% for preset_name, preset_data in user.presets.items %}
+                        <option value="{{user.spotify_id }}|{{ preset_name }}">{{ user.name }} - {{ preset_name }}</option>
+                    {% endfor %}
+                    {% for profile_name, profile_data in availible_presets.items %}
+                        {% for id, profile_presets in profile_data.items %}
+                            {% for preset_name, preset_data in profile_presets.items %}
+                                <option value="{{ id }}|{{ preset_name }}">{{ profile_name }} - {{ preset_name }}</option>
+                            {% endfor %}
+                        {% endfor %}
+                    {% endfor %}
+                </select>
+                <small class="form-help">Hold Ctrl/Cmd to select multiple presets</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="num_tracks">Number of Recommendations:</label>
+                <input name="num_tracks" type="number" step="1" min="1" max="50" value="10" class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label for="ranking">Rank by:</label>
+                <select name="ranking" id="ranking" class="form-select">
+                    {% for ranking in rankings %}
+                        <option value="{{ ranking }}"
+                            {% if ranking == "most popular" %}selected{% endif %}>
+                            {{ ranking|title }}</option>
+                    {% endfor %}
+                </select>
+                <small class="form-help">How tracks are ranked, default is popularity</small>
+            </div>
+
+            
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">Get Recommendations</button>
+                <button type="reset" class="btn-reset">Clear Form</button>
+            </div>
+        </form>
+    </div>
+    
+</div>
+
+
+{% endblock %}

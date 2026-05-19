@@ -1,0 +1,76 @@
+{% extends 'base.html' %} 
+
+{% block content %}
+<div class="recommendations-container">
+
+    <div class="recommendations-header">
+        <h2> Recommendations </h2>
+        
+        {% if recommendations %}
+            <div style="margin: 20px 0">
+                <form action="{% url 'make_spotify_playlist' %}" method="POST">
+                    {% csrf_token %}
+            
+                    {% for track in recommendations %}
+                        <input type="hidden" name="song_codes" value="{{ track.id }}">
+                    {% endfor %}
+            
+                    <button type="submit" class="btn-submit">
+                        Save to Spotify Account
+                    </button>
+                </form>
+            </div>
+        {% endif %}
+
+        {% if room_code %}
+            <p><a href="{% url 'room_view' room_code %}" class="link" style="color: #1db954; font-weight: bold;">← Back to Room</a></p>
+        {% endif %}
+    </div>
+
+
+    {% if not recommendations %}
+        {% if artists %}
+            <div class="container">
+                <p> No recommendations generated </p>
+                <p> There might be a problem with your spelling of an artist's name or the artist(s) isn't on Spotify </p>
+
+                <h4> Artists names </h4>
+                <ul>
+                    {% for artist in artists %}
+                        <li> {{ artist }} </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    {% endif %}
+
+
+    {% for track in recommendations %}
+    <div class="recommendation_card">
+        <div class="track_heading">
+            <h3> {{ forloop.counter }}. {{ track.name }} </h3>
+        </div>
+
+        {% if track.album.images %}
+        <img src="{{ track.album.images.0.url }}" 
+            alt="{{ track.album.name }} album cover"
+            class="album_art">
+        {% endif %}
+
+        <div class="track_details">
+            <p><strong>Artists:</strong> 
+                {% for artist in track.artists %}
+                    {{ artist.name }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </p>
+            <p> <strong> Album: </strong> {{ track.album.name }}</p>
+            <p> <strong> Explicit: </strong> {{ track.explicit }} </p>
+            <p> <a href="{{ track.external_urls.spotify }}" class="link"> Open in Spotify </a></p>
+        </div>
+
+    </div>
+    {% endfor %}
+
+</div>
+
+{% endblock %}
