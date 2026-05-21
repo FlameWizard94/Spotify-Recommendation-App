@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Search = () => {
-  const { user, isAuthenticated, accessToken, spotifyLogin } = useAuth();
+  const { user, isAuthenticated, accessToken, spotifyLogin, refreshUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -90,9 +90,8 @@ const Search = () => {
   const handleFollowToggle = async (profileId) => {
     try {
       const isFollowing = user?.following?.includes(profileId);
-      const endpoint = isFollowing ? 'unfollow' : 'follow';
       
-      const response = await fetch(`/api/${endpoint}/${profileId}/`, {
+      const response = await fetch(`/api/follow/${profileId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +101,10 @@ const Search = () => {
       
       if (response.ok) {
         // Refresh profiles to update follow status
-        await getProfiles();
+        //await getProfiles();
+        await refreshUser();
+        const data = await response.json();
+        console.log(data.message)
       }
     } catch (error) {
       console.error('Follow/unfollow error:', error);

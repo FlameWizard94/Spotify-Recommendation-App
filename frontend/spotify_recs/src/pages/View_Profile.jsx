@@ -7,7 +7,7 @@ import defaultIcon from '../assets/images/default_icon.png';
 const View_Profile = () => {
   const { spotifyId } = useParams(); // Get the ID from the URL
   const navigate = useNavigate();
-  const { user: currentUser, accessToken, refreshUser } = useAuth();
+  const { user: currentUser, accessToken, refreshUser, refreshAccessToken, spotifyLogin } = useAuth();
   
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -80,13 +80,48 @@ const View_Profile = () => {
         },
       });
       
-      if (response.ok) {
-        // Refresh profile data
-        await refreshUser();
-        //await fetchProfile();
-        const data = await response.json();
-        console.log(data.message)
+      if (response.status === 401) {
+        console.log('Token expired or invalid, attempting to refresh...');
+        
+        // Try to refresh the token
+        const refreshed = await refreshAccessToken();
+        
+        if (refreshed) {
+          // Retry the follow request with new token
+          console.log('Token refreshed, retrying follow request...');
+          const retryResponse = await fetch(`/api/follow/${profile.spotify_id}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (retryResponse.ok) {
+            await refreshUser();
+            const data = await retryResponse.json();
+            console.log(data.message);
+          } else {
+            throw new Error('Retry failed');
+          }
+        } else {
+          // Refresh failed, redirect to login
+          console.log('Token refresh failed, redirecting to login...');
+          spotifyLogin(window.location.pathname);
+        }
+        return;
       }
+      
+      // Handle other errors
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      // Success
+      await refreshUser();
+      const data = await response.json();
+      console.log(data.message);
+      
     } catch (error) {
       console.error('Follow/unfollow error:', error);
     }

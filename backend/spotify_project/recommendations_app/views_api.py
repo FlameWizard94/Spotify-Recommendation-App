@@ -281,12 +281,13 @@ def current_user_api(request):
 def api_search_profiles(request):
     '''Used to get profiles for search page'''
     user = get_profile(request)
-    term = request.POST.get('term', None)
+    term = request.GET.get('term', None)
     if term:
-        profile_objects = Profile.objects.filter(~Q(spotify_id=user.spotify_id) &
-                                            (Q(spotify_id__icontains=term) | 
-                                            Q(name__icontains=term)) &
-                                            (~Q(visibility='private'))
+        print("Term: ", term)
+        profile_objects = Profile.objects.filter((~Q(spotify_id=user.spotify_id) &
+                                                  (Q(spotify_id__icontains=term) | 
+                                                   Q(name__icontains=term)) ) &
+                                                    ~Q(visibility='private')
                 )
     else:
         profile_objects = Profile.objects.filter(~Q(spotify_id=user.spotify_id) 
@@ -295,7 +296,7 @@ def api_search_profiles(request):
 
     
         
-    print(term)
+    print("Term: ", term)
     print(f'profiles\n{profile_objects}')
     #profiles_list = list(profiles_objects)
     serializer = ProfileSerializer(profile_objects, many=True)
