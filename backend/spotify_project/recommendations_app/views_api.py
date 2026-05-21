@@ -18,6 +18,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken
 import json
 from django.http import JsonResponse
 from django.db.models import Q
@@ -241,38 +242,37 @@ def logout_api(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def current_user_api(request):
-    """Get current user info from Profile model"""
+    """Get current user info from JWT token"""
     try:
-        # Get the user from JWT token
-        auth = JWTAuthentication()
-        user_auth = auth.authenticate(request)
+        # Get token from header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return Response({'error': 'No authorization header'}, status=401)
         
-        if user_auth:
-            # user_auth[0] is the user, but we need to get profile
-            # Since we're not using Django User, we need a different approach
-            from rest_framework_simplejwt.tokens import AccessToken
-            
-            auth_header = request.headers.get('Authorization')
-            token = auth_header.split()[1]
-            access_token = AccessToken(token)
-            spotify_id = access_token.payload.get('user_id')
-            
-            profile = Profile.objects.get(spotify_id=spotify_id)
-            return Response({
-                'spotify_id': profile.spotify_id,
-                'name': profile.name,
-                'email': profile.email,
-                'image': profile.image,
-                'following': getattr(profile, 'following', []),
-            })
-        else:
-            return Response({'error': 'User not found'}, status=404)
+        token = auth_header.split()[1]
+        access_token = AccessToken(token)
+        current_spotify_id = access_token.payload.get('user_id')
+        
+        # Get profile
+        profile = Profile.objects.get(spotify_id=current_spotify_id)
+        
+        return Response({
+            'spotify_id': profile.spotify_id,
+            'name': profile.name,
+            'email': profile.email,
+            'image': profile.image,
+            'following': profile.following,
+            'visibility': profile.visibility,
+        })
+        
     except Profile.DoesNotExist:
         return Response({'error': 'User not found'}, status=404)
     except Exception as e:
+        print(f"Error in current_user_api: {e}")
         return Response({'error': str(e)}, status=400)
     
 
@@ -302,7 +302,72 @@ def api_search_profiles(request):
         
     return Response({'profiles': serializer.data})
 
-    
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def view_profile_api(request, spotify_id):
+    """Returns individual profile"""
+    print("Viewing id", spotify_id)
+    profile = Profile.objects.get(spotify_id=spotify_id)
+    serializer = ProfileSerializer(profile, many=False)
+    print(serializer.data)
+
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def follow_api(request, spotify_id):
+    """
+    Follow or unfollow a user
+    Only need the target user's ID in the URL
+    Current user is determined from the JWT token
+    """
+    try:
+        # Get current user from JWT token
+        # The request.user should be your Profile object if you set up custom auth
+        current_user = request.user
+        
+        # Alternative: If request.user is not set up, extract from token
+        # auth_header = request.headers.get('Authorization')
+        # if auth_header:
+        #     token = auth_header.split()[1]
+        #     access_token = AccessToken(token)
+        #     current_spotify_id = access_token.payload.get('user_id')
+        #     current_user = Profile.objects.get(spotify_id=current_spotify_id)
+        
+        target_user = Profile.objects.get(spotify_id=spotify_id)
+        
+        if spotify_id in current_user.following:
+            current_user.following.remove(spotify_id)
+            current_user.save()
+
+            print(f'Successfully unfollowed {target_user.name}')
+
+            return Response({
+                'status': 'unfollowed',
+                'message': f'Successfully unfollowed {target_user.name}',
+                'is_following': False
+            })
+
+        else:
+            current_user.following.append(spotify_id)
+            current_user.save()
+
+            print(f'Successfully followed {target_user.name}')
+
+            return Response({
+                    'status': 'followed',
+                    'message': f'Successfully followed {target_user.name}',
+                    'is_following': True
+                })
+            
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
 
 # views_api.py
 @api_view(['GET'])

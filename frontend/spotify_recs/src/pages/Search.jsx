@@ -1,5 +1,4 @@
-// pages/Search.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Search = () => {
@@ -65,7 +64,6 @@ const Search = () => {
       const data = await response.json();
       console.log('API Response:', data);
       
-      // Backend already filters visibility, so just set the profiles
       const profilesData = Array.isArray(data.profiles) ? data.profiles : [];
       setProfiles(profilesData);
       
@@ -124,22 +122,23 @@ const Search = () => {
 
   return (
     <div className="container">
-      <h2>Profile Search Page</h2>
+      <h2>Profile Search Page
       
-      <div className="search-bar">
-        <form onSubmit={handleSearch}>
-          <input
-            className="form-input"
-            type="text"
-            placeholder="Search a user's name or id"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <button className="btn-submit" type="submit" disabled={loading}>
-            {loading ? 'Searching...' : 'Search'}
-          </button>
-        </form>
-      </div>
+        <div className="search-bar">
+          <form onSubmit={handleSearch}>
+            <input
+              className="form-input"
+              type="text"
+              placeholder="Search a user's name or id"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button className="btn-submit" type="submit" disabled={loading}>
+              {loading ? 'Searching...' : 'Search'}
+            </button>
+          </form>
+        </div>
+      </h2>
 
       {loading && <p>Loading...</p>}
       

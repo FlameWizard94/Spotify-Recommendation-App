@@ -42,6 +42,8 @@ urlpatterns = [
     path('api/logout/', logout_api, name='logout_api'),
     path('api/current-user/', current_user_api, name='current_user_api'),
     path('api/search-profiles/', api_search_profiles, name='search_profiles_api'),
+    path('api/view-profile/<str:spotify_id>', view_profile_api, name="view_profile_api"),
+    path('api/follow/<str:spotify_id>', follow_api, name="follow_api"),
     path('api/test-session/', test_session, name='test_session'),
 ]
 

@@ -2,6 +2,7 @@ from django.db import models
 
 # Create your models here.
 class Profile(models.Model):
+    
     spotify_id = models.CharField(max_length=200, primary_key=True)
     name = models.CharField(max_length=200)
     email = models.EmailField(null=True, blank=True)
@@ -22,6 +23,16 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.spotify_id})"
+    
+    @property
+    def is_authenticated(self):
+        """Required for Django's permission system"""
+        return True
+    
+    @property
+    def is_anonymous(self):
+        """Required for Django's permission system"""
+        return False
     
 class Room(models.Model):
     room_code = models.CharField(max_length=4, primary_key=True)

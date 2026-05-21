@@ -1,5 +1,5 @@
 // contexts/AuthContext.jsx
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 
 const AuthContext = createContext();
 
@@ -68,6 +68,26 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
+
+  const refreshUser = useCallback(async () => {
+    if (!accessToken) return;
+    
+    try {
+      const response = await fetch('/api/current-user/', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+      }
+    } catch (error) {
+      console.error('Error refreshing user:', error);
+    }
+  }, [accessToken]);
 
   const refreshAccessToken = async () => {
     try {
@@ -162,6 +182,8 @@ export const AuthProvider = ({ children }) => {
     spotifyLogin,
     logout,
     accessToken,
+    setUser,  
+    refreshUser,
   };
 
   return (
