@@ -1,7 +1,7 @@
 // pages/ViewProfile.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, printUser } from '../contexts/AuthContext';
 import defaultIcon from '../assets/images/default_icon.png';
 
 const View_Profile = () => {

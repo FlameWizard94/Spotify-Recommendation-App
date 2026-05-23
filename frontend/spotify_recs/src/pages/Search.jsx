@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Search = () => {
-  const { user, isAuthenticated, accessToken, spotifyLogin, refreshUser } = useAuth();
+  const { user, isAuthenticated, accessToken, spotifyLogin, refreshUser, printUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -11,7 +11,7 @@ const Search = () => {
   // Set current user when authenticated
   useEffect(() => {
     if (user) {
-      console.log('User data from auth:', user);
+      printUser(user);
     }
   }, [user]);
 
@@ -150,9 +150,6 @@ const Search = () => {
         <p>No profiles found for "{searchTerm}"</p>
       )}
 
-      {!loading && profiles.length === 0 && !searchTerm && (
-        <p>Enter a search term to find users</p>
-      )}
 
       {!loading && profiles.map((profile) => (
         <div key={profile.spotify_id} className="profile_card">

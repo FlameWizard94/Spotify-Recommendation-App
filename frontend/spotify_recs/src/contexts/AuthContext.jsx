@@ -1,5 +1,6 @@
 // contexts/AuthContext.jsx
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom' 
 
 const AuthContext = createContext();
 
@@ -41,6 +42,14 @@ export const AuthProvider = ({ children }) => {
     
     loadUserFromStorage();
   }, []);
+
+  const printUser = async (user) => {
+    if (user){
+      console.log(user.spotify_id);
+      console.log(user.name);
+      console.log(user.email);
+    }
+  }
 
   // Fetch current user from backend (optional - you might not need this if you store user data)
   const fetchCurrentUser = async () => {
@@ -158,6 +167,7 @@ export const AuthProvider = ({ children }) => {
           },
           body: JSON.stringify({ refresh: refreshToken })
         });
+        setUser(null);
       } catch (error) {
         console.error('Logout error:', error);
       }
@@ -184,6 +194,7 @@ export const AuthProvider = ({ children }) => {
     accessToken,
     setUser,  
     refreshUser,
+    printUser,
   };
 
   return (

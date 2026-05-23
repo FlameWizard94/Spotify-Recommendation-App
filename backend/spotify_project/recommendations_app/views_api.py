@@ -194,17 +194,19 @@ def spotify_auth_complete_api(request):
         
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
+
+        serializer = ProfileSerializer(profile, many=False)
+        print(serializer.data)
         
         # Prepare user data for React
-        user_data = {
+        '''user_data = {
             'spotify_id': profile.spotify_id,
             'name': profile.name,
             'email': profile.email,
             'image': profile.image,
-        }
+        }'''
         
-        import json
-        user_json = json.dumps(user_data)
+        user_json = json.dumps(serializer.data)
         
         # Build redirect URL
         react_url = f"http://127.0.0.1:3000/auth/callback?access={access_token}&refresh={refresh_token}&next={next_url}&user={urllib.parse.quote(user_json)}"
@@ -259,16 +261,49 @@ def current_user_api(request):
         
         # Get profile
         profile = Profile.objects.get(spotify_id=current_spotify_id)
+        serializer = ProfileSerializer(profile, many=False)
+        print(serializer.data)
         
-        return Response({
+        '''return Response({
             'spotify_id': profile.spotify_id,
             'name': profile.name,
             'email': profile.email,
             'image': profile.image,
             'following': profile.following,
             'visibility': profile.visibility,
-        })
+            'data' : profile.data,
+        })'''
+
+        return Response(serializer.data)
         
+    except Profile.DoesNotExist:
+        return Response({'error': 'User not found'}, status=404)
+    except Exception as e:
+        print(f"Error in current_user_api: {e}")
+        return Response({'error': str(e)}, status=400)
+    
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_following_api(request):
+    '''Get the current user's followers'''
+    try:
+        # Get token from header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return Response({'error': 'No authorization header'}, status=401)
+        
+        token = auth_header.split()[1]
+        access_token = AccessToken(token)
+        current_spotify_id = access_token.payload.get('user_id')
+
+        curent_user = Profile.objects.get(spotify_id=current_spotify_id)
+        followers = Profile.objects.filter(Q(spotify_id__in=curent_user.following))
+        serializer = ProfileSerializer(followers, many=True)
+        print(serializer.data)
+
+        return Response(serializer.data)
+
     except Profile.DoesNotExist:
         return Response({'error': 'User not found'}, status=404)
     except Exception as e:

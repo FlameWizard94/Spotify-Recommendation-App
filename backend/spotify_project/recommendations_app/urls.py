@@ -41,6 +41,7 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/logout/', logout_api, name='logout_api'),
     path('api/current-user/', current_user_api, name='current_user_api'),
+    path('api/get-following/', get_following_api, name="get_following_api"),
     path('api/search-profiles/', api_search_profiles, name='search_profiles_api'),
     #path('api/search-profiles-term/<str:term>', api_search_profiles_term, name='search_profiles_term_api'),
     path('api/view-profile/<str:spotify_id>', view_profile_api, name="view_profile_api"),
