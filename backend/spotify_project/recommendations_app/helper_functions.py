@@ -11,9 +11,10 @@ import random
 from datetime import datetime
 from functools import wraps
 import concurrent.futures
-import queue
 import threading
 import time
+from django.utils import timezone
+from datetime import timedelta
 
 #For commands
 ARTISTS = sorted([
@@ -57,8 +58,11 @@ all_tracks = [] #for recommendations
 tracks_lock = threading.Lock() #for recommendations
 genre_artist_lock = threading.Lock() #for recs
 
+
 def comma_seperation(phrase):
     """Turns comma seperated phrases into a list"""
+    if isinstance(phrase, list):
+        return phrase
     phrase = phrase.strip()
     if not phrase:
         return []
@@ -78,6 +82,44 @@ def comma_seperation(phrase):
 
     return words
 
+def refresh_spotify_token(user):
+    """Refresh an expired Spotify access token"""
+    if not user.refresh_token:
+        print("No refresh token available")
+        return None
+    
+    url = "https://accounts.spotify.com/api/token"
+    data = {
+        'grant_type': 'refresh_token',
+        'refresh_token': user.refresh_token,
+        'client_id': settings.SPOTIFY_CLIENT_ID,
+        'client_secret': settings.SPOTIFY_CLIENT_SECRET,
+    }
+    
+    try:
+        response = requests.post(url, data=data)
+        response.raise_for_status()
+        token_data = response.json()
+        
+        expires_in = token_data.get('expires_in', 3600)
+        new_expiry = timezone.now() + timedelta(seconds=expires_in)
+        
+
+        user.access_token = token_data['access_token']
+        user.token_expiry = new_expiry
+        
+        # Only update refresh token if a new one is provided
+        if 'refresh_token' in token_data:
+            user.refresh_token = token_data['refresh_token']
+        
+        user.save()
+        
+        print(f"Token refreshed for user {user.name}. New expiry: {user.token_expiry}")
+        return user.access_token
+        
+    except Exception as e:
+        print(f"Error refreshing Spotify token: {e}")
+        return None
 
 def api_call_limiter(func):
     """Decorator to add exponential backoff to any API call
@@ -121,6 +163,7 @@ def get_profile(request):
         raise ProfileNotFound("Profile does not exist")
     
     return profile
+
 
 #Authorization Code with PKCE Flow
 def Code_verifier():

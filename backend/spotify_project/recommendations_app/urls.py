@@ -6,6 +6,11 @@ from .views_api import *
 from .models import *
 from rest_framework import routers
 from django.urls import path, include
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenVerifyView,
+)
 
 
 router = routers.DefaultRouter()
@@ -35,6 +40,9 @@ urlpatterns = [
     path('room/<str:room_code>/generate/', generate_room_mix, name='generate_room_mix'),
     path('make-playlist/', make_spotify_playlist, name='make_spotify_playlist'),
     path('api/', include(router.urls)),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('api/search/', api_search_page, name='api_search'),
     path('api/spotify-login/', spotify_login_api, name='spotify_login_api'),
     path('api/spotify-auth-complete/', spotify_auth_complete_api, name='spotify_auth_complete_api'),
@@ -43,9 +51,18 @@ urlpatterns = [
     path('api/current-user/', current_user_api, name='current_user_api'),
     path('api/get-following/', get_following_api, name="get_following_api"),
     path('api/search-profiles/', api_search_profiles, name='search_profiles_api'),
+    path('api/visibility/', change_visibility_api, name="change_visibility_api"),
     #path('api/search-profiles-term/<str:term>', api_search_profiles_term, name='search_profiles_term_api'),
     path('api/view-profile/<str:spotify_id>', view_profile_api, name="view_profile_api"),
     path('api/follow/<str:spotify_id>', follow_api, name="follow_api"),
     path('api/test-session/', test_session, name='test_session'),
+    path('api/set-preferences/', set_preferences_api, name="set_preferences_api"),
+    path('api/presets/add/', add_preset_api, name="add_preset_api"),
+    path('api/presets/delete/', delete_preset_api, name="delete_preset_api"),
+    path('api/genres/', get_genres_api, name='genres_api'),
+    path('api/get-recommendations/', get_recommendations_api, name="get_recommendations_api"),
+    path('api/get-presets/', get_presets_api, name='get_presets_api'),
+    path('api/get-group-recommendations/', get_group_recommendations_api, name="get_group_recommendations_api"),
+    path('api/make_playlist_api', make_spotify_playlist_api, name="make_spotify_playlist_api"),
 ]
 

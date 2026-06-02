@@ -1,5 +1,5 @@
 // contexts/AuthContext.jsx
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom' 
 
 const AuthContext = createContext();
@@ -12,12 +12,33 @@ export const useAuth = () => {
   return context;
 };
 
+const isTokenExpired = (token) => {
+  if (!token) return true;
+  
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return true;
+    
+    const payload = JSON.parse(atob(parts[1]));
+    if (!payload.exp) return true;
+    
+    const currentTime = Math.floor(Date.now() / 1000);
+    return payload.exp < currentTime;
+  } catch (error) {
+    return true;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState(localStorage.getItem('access_token'));
   const [refreshToken, setRefreshToken] = useState(localStorage.getItem('refresh_token'));
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const isAuthenticated = useMemo(() => {
+    return !!user && accessToken && !isTokenExpired(accessToken);
+  }, [user, accessToken]);
 
   // Load user on initial load if token exists
   useEffect(() => {
@@ -99,13 +120,15 @@ export const AuthProvider = ({ children }) => {
   }, [accessToken]);
 
   const refreshAccessToken = async () => {
+    const currentRefreshToken = localStorage.getItem('refresh_token');
+
     try {
       const response = await fetch('/api/token/refresh/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ refresh: refreshToken })
+        body: JSON.stringify({ refresh: currentRefreshToken })
       });
       
       if (response.ok) {
@@ -123,6 +146,49 @@ export const AuthProvider = ({ children }) => {
       return false;
     }
   };
+
+  const authFetch = async (url, options = {}) => {
+    let currentToken = accessToken;
+    
+    const makeRequest = async (token) => {
+        return fetch(url, {
+            ...options,
+            headers: {
+                ...options.headers,
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+    };
+    
+    let response = await makeRequest(currentToken);
+    
+    // If unauthorized, try to refresh token once
+    if (response.status === 401) {
+        console.log('Token expired, refreshing...');
+        const refreshed = await refreshAccessToken();
+        
+        if (refreshed) {
+            currentToken = localStorage.getItem('access_token');
+            response = await makeRequest(currentToken);
+        } else {
+            // Refresh failed, redirect to login
+            console.log('Refresh failed, redirecting to login');
+            spotifyLogin(window.location.pathname);
+            // Throw error to prevent further processing
+            throw new Error('Session expired');
+        }
+    }
+    
+    // If still unauthorized after refresh, handle it
+    if (response.status === 401) {
+        console.log('Still unauthorized after refresh');
+        spotifyLogin(window.location.pathname);
+        throw new Error('Authentication failed');
+    }
+    
+    return response;
+};
 
   const spotifyLogin = async (nextUrl = '/') => {
     if (isLoggingIn) {
@@ -188,13 +254,14 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     loading,
-    isAuthenticated: !!user,
+    isAuthenticated,
     spotifyLogin,
     logout,
     accessToken,
     setUser,  
     refreshUser,
     printUser,
+    authFetch,
   };
 
   return (

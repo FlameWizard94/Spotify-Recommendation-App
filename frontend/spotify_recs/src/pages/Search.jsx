@@ -22,6 +22,7 @@ const Search = () => {
     }
   }, [isAuthenticated, accessToken]);
 
+
   // Search when search term changes (optional - or use button only)
   useEffect(() => {
     if (isAuthenticated && accessToken && searchTerm) {
@@ -135,7 +136,10 @@ const Search = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <button className="btn-submit" type="submit" disabled={loading}>
+            <button 
+              className="btn-submit" 
+              type="submit" 
+              disabled={loading || !searchTerm}>
               {loading ? 'Searching...' : 'Search'}
             </button>
           </form>

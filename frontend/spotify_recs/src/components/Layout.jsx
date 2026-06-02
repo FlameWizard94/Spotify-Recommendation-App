@@ -6,7 +6,6 @@ import './Layout.css';
 const Layout = () => {
   return (
     <>
-      {/* Top Navigation Bar - equivalent to div.top in base.html */}
       <div className="nav">
         <h1 className="nav_text">
           <Link to="/" className="nav_text">Home</Link>

@@ -7,7 +7,8 @@ class ProfileSerializer(serializers.HyperlinkedModelSerializer):
 		model = Profile
 		fields = ['spotify_id',
 			        'name', 'email', 
-					'image', 'preferences', 
+					'image', 'preferences',
+					'presets', 
 					'data', 'following', 
 					'access_token', 
 					'refresh_token']

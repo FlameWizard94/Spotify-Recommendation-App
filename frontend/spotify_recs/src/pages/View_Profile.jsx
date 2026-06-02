@@ -112,7 +112,6 @@ const View_Profile = () => {
         return;
       }
       
-      // Handle other errors
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
