@@ -218,11 +218,7 @@ const View_Profile = () => {
           )}
         </div>
 
-        {/* Other profile sections */}
-        <div className="profile-stats" style={{ marginTop: '30px' }}>
-          <h2>Statistics</h2>
-          <p>Followers: {profile.followers?.length || 0}</p>
-        </div>
+        
       </div>
     </div>
   );
