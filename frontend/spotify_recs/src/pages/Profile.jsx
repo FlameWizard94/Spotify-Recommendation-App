@@ -20,6 +20,7 @@ const Profile = () => {
     if (currentUser) {
         console.log('User data from Auth:');
         printUser(currentUser);
+        console.log(currentUser.implicit_preferences);
 
     }
   }, [currentUser, printUser]);

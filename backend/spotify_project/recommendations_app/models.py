@@ -7,6 +7,7 @@ class Profile(models.Model):
     name = models.CharField(max_length=200)
     email = models.EmailField(null=True, blank=True)
     image = models.CharField(max_length=200, null=True, blank=True)
+    implicit_preferences = models.JSONField(default=dict, blank=True)
     preferences = models.JSONField(default=dict, blank=True)
     data = models.JSONField(default=dict, blank=True)
     following = models.JSONField(default=list, blank=True)

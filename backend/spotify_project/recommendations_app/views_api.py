@@ -167,7 +167,7 @@ def spotify_login_api(request):
     print(f"NEW state: {state}")
     print(f"Session keys: {list(request.session.keys())}")
     
-    scope = 'user-read-private user-read-email playlist-modify-public'
+    scope = ALL_SCOPES
     redirect_uri = request.build_absolute_uri('/api/spotify-auth-complete/')
     
     params = {
@@ -285,6 +285,11 @@ def spotify_auth_complete_api(request):
         )
         print(f"Profile {'created' if created else 'updated'}")
         print(f"{profile.name}'s Token expires in {expires_in} seconds at {token_expiry}")
+
+        implicit_preferences = get_implicit_preferences(profile)
+        profile.implicit_preferences = implicit_preferences
+        profile.save()
+        #write_json_to_file(data=implicit_preferences, filename='top_artists.json')
         
         # Generate JWT tokens
         from rest_framework_simplejwt.tokens import RefreshToken

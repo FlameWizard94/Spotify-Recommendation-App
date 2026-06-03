@@ -14,6 +14,9 @@ import threading
 import time
 from django.utils import timezone
 from datetime import timedelta
+import json
+import os
+from .recommendation_functions import api_call_limiter
 
 #For commands
 ARTISTS = sorted([
@@ -42,6 +45,7 @@ GENRES = sorted([
             'samba', 'ska',
             'sleep', 'soul', 'spanish',
             'swedish',
+            'west coast hip hop',
             'world-music', 'drill'
         ])
 
@@ -51,6 +55,21 @@ RANKING_TYPES = ['most popular',
                  'random',
                  'newest',
                  'oldest']
+
+
+# Common Spotify scopes for your app
+SCOPES = [
+    'user-read-private',      # Read user's profile info
+    'user-read-email',        # Read user's email
+    'playlist-modify-public', # Create/modify public playlists
+    'playlist-modify-private',# Create/modify private playlists
+    'user-follow-read',       # Read who the user follows
+    'user-follow-modify',     # Follow/unfollow artists
+    'user-top-read',          # Read user's top artists/tracks
+    'user-library-read',      # Read user's saved tracks/albums
+]
+
+ALL_SCOPES = ' '.join(SCOPES)
 
 
 def comma_seperation(phrase):
@@ -75,6 +94,18 @@ def comma_seperation(phrase):
     words.append(word.strip()) #For last word
 
     return words
+
+def write_json_to_file(data, filename="output.json", folder="_output_data"):
+    """Write JSON data to a file in a readable format"""
+
+    os.makedirs(folder, exist_ok=True)
+
+    filepath = os.path.join(folder, filename)
+    
+    with open(filepath, "w") as f:
+        json.dump(data, f, indent=4, sort_keys=True)
+
+    print('Saved to:', filepath)
 
 def refresh_spotify_token(user):
     """Refresh an expired Spotify access token"""
@@ -207,4 +238,106 @@ def get_user_profile(access_token):
     
     return response.json()
 
+@api_call_limiter
+def get_implicit_preferences(user):
+    """Used to get user details from spotify"""
+    access_token=user.access_token
 
+    # Get info fromartists they follow
+    url = "https://api.spotify.com/v1/me/following"
+    headers = {
+        'Authorization' : f'Bearer {access_token}'
+    }
+    params = {
+        'type': 'artist', 
+        'limit': 50
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+    response.raise_for_status()
+
+    artists = {}
+    genres = {}
+
+    data = response.json()
+    for x in data['artists']['items']:
+        artist_id = x['id']
+        artist_name = x['name']
+
+        if artist_name in artists.keys():
+            artists[artist_name] = {
+                'id': artist_id,
+                'points': (artists[artist_name]['points']) + 1
+            }
+        else:
+            artists[artist_name] = {
+                'id': artist_id,
+                'points': 1
+            }
+
+        for genre in x['genres']:
+            if genre in genres:
+                genres[genre] +=1
+            else:
+                genres[genre] = 1
+
+    # Get info from user's favourite artists
+    url = "https://api.spotify.com/v1/me/top/artists"
+    params = {
+        'type': 'artists', 
+        'limit': 50
+    }
+    
+    response = requests.get(url, headers=headers, params=params)
+    response.raise_for_status()
+
+    top_artists_data = response.json()
+
+    for x in top_artists_data['items']:
+        artist_id = x['id']
+        artist_name = x['name']
+
+        if artist_name in artists.keys():
+            artists[artist_name] = {
+                'id': artist_id,
+                'points': (artists[artist_name]['points']) + 1
+            }
+        else:
+            artists[artist_name] = {
+                'id': artist_id,
+                'points': 1
+            }
+        
+        for genre in x['genres']:
+            if genre in genres:
+                genres[genre] +=1
+            else:
+                genres[genre] = 1
+
+    """url = "https://api.spotify.com/v1/me/top/tracks"
+    params = {
+        'type': 'tracks', 
+        'limit': 50
+    }"""
+
+    sorted_genres = sorted(genres.items(), key=lambda item: item[1], reverse=True)
+    sorted_artists = sorted(artists.items(), key=lambda item: item[1]['points'], reverse=True)
+
+    for artist_name, artist_data in sorted_artists[:10]:
+        print(f"  {artist_name}: {artist_data['points']} points")
+
+    for genre, points in sorted_genres[:10]:
+        print(f"  {genre}: {points}")
+
+    #if genre in GENRES, add to implicit
+
+    implicit_prefernces = {
+        'artists' : artists,
+        'genres' : genres
+    }
+
+    print('implicit_preferences:', implicit_prefernces)
+
+    return implicit_prefernces
+
+    
