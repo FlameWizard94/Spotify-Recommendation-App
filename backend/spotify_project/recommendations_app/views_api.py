@@ -13,6 +13,7 @@ from django.conf import settings
 from django.shortcuts import redirect
 import requests
 from .helper_functions import *
+from .recommendation_functions import make_recommendations
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.tokens import AccessToken
 import json
