@@ -8,6 +8,8 @@ const Profile = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [visibilityChanged, setVisibilityChange] = useState(false);
+  const artists = currentUser?.implicit_preferences?.artists || {};
+  const genres = currentUser?.implicit_preferences?.genres || {};
 
   const [formData, setFormData] = useState({
     artists: '',
@@ -35,6 +37,24 @@ const Profile = () => {
       });
     }
   }, [currentUser]);
+
+  const sortedImpliedArtists = Object.entries(artists)
+    .map(([name, data]) => ({
+      name: name,
+      id: data.id,
+      points: data.points
+    }))
+    .sort((a, b) => b.points - a.points)
+    .slice(0, 10);
+  
+
+  const sortedImpliedGenres = Object.entries(genres)
+    .map(([genre, count]) => ({
+      name: genre,
+      count: count
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
 
 
   const handleVisibilityChange = async (event) => {
@@ -202,54 +222,77 @@ const Profile = () => {
           type="submit"
           onClick={handleLogout}>Logout</button>
       </div>
-      <div className="form-container">
+      <div className="nested-container">
         <h2>
           <a className="link" href="/manage-following">
             People you follow
           </a>
         </h2>
       </div>
-
-      <br />
+    
       
-      <h2>Visibility</h2>
+      <div className='nested-container'>
+        <h2>Visibility</h2>
+        <form className="recommendation-form">
+          <div className="form-group">
+            {visibilityChanged && (
+              <div className="alert-success">
+                {`Visibility changed to ${visibility}`}
+              </div>
+            )}
+            <label htmlFor="visibility">Set visibility:</label>
+            <select 
+              name="visibility" 
+              id="visibility" 
+              className="form-select"
+              onChange={(e) => handleVisibilityChange(e)}
+            >
+              <option value="public">Public</option>
+              <option value="following">Following</option>
+              <option value="private">Private</option>
+            </select>
+            <small className="form-help">
+              Public, anyone on this website can search for and see your details.<br />
+              Following, only those who you follow can find you.<br />
+              Private, no one can see your details.<br />
+            </small>
+          </div>
+        </form>
+      </div>
       
-      <form className="recommendation-form">
-        <div className="form-group">
-          {visibilityChanged && (
-            <div className="alert-success">
-              {`Visibility changed to ${visibility}`}
-            </div>
-          )}
-          <label htmlFor="visibility">Set visibility:</label>
-          <select 
-            name="visibility" 
-            id="visibility" 
-            className="form-select"
-            onChange={(e) => handleVisibilityChange(e)}
-          >
-            <option value="public">Public</option>
-            <option value="following">Following</option>
-            <option value="private">Private</option>
-          </select>
-          <small className="form-help">
-            Public, anyone on this website can search for and see your details.<br />
-            Following, only those who you follow can find you.<br />
-            Private, no one can see your details.<br />
-          </small>
-        </div>
-      </form>
-
-      <br /><br />
-      
-      <div className="form-container">
+      <div className="nested-container">
         <h2>
           <a className="link" href="/profile/presets">Edit Presets</a>
         </h2>
       </div>
 
-      <div className="form-container">
-        <h2>Update Your Preferences</h2>
+      <div className="nested-container">
+          <h2>Implicit Preferences</h2>
+          <h3 style={{ marginBottom : 0 }}>Artists</h3>
+          {sortedImpliedArtists.map((artist, index) => (
+            <div key={artist.id} className="list-item">
+              <span className="rank"><strong>{index + 1}. </strong></span>
+              <span className="name">{artist.name}</span>
+            </div>
+          ))}
+          {sortedImpliedArtists.length === 0 && (
+            <p>No artist data available</p>
+          )}
+
+          <h3 style={{ marginBottom : 0 }}>Genres</h3>
+          {sortedImpliedGenres.map((genre, index) => (
+            <div key={genre.name} className="list-item">
+              <span className="rank"><strong>{index + 1}. </strong></span>
+              <span className="name">{genre.name}</span>
+            </div>
+          ))}
+          {sortedImpliedGenres.length === 0 && (
+            <p>No genre data available</p>
+          )}
+      </div>
+
+      <div className="nested-container">
+        <h2>Your Specified Preferences</h2>
         
          <form className="recommendation-form" onSubmit={handleSubmit} onReset={handleReset}>
           {error && (

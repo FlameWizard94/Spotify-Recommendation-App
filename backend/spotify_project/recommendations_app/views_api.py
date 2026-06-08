@@ -704,9 +704,14 @@ def get_group_recommendations_api(request, user):
         for profile in preference_profiles:
             total_artists.update(comma_seperation(profile.preferences.get('fav_artists', '')))
             total_genres.update(comma_seperation(profile.preferences.get('fav_genres', '')))
-            num_tracks_tally += int(profile.preferences.get('num_tracks', 10))
-            ranking_tally[profile.preferences.get('fav_ranking', 'most popular')] += 1
-            total_preferences.append(profile)
+            if profile.preferences:
+                num_tracks_tally += int(profile.preferences.get('num_tracks', 10))
+                ranking_tally[profile.preferences.get('fav_ranking', 'most popular')] += 1
+                total_preferences.append(profile)
+            else:
+                num_tracks_tally += int(profile.implicit_preferences.get('num_tracks', 10))
+                ranking_tally[profile.implicit_preferences.get('fav_ranking', 'most popular')] += 1
+                total_preferences.append(profile)
 
     # Process presets
     if selected_presets:

@@ -12,6 +12,10 @@ body {
     background-color: #f5f5f5;
 }
 
+h2 {
+    color: #1DB954;
+}
+
 .alert-success {
     color: #1DB954;
     font-weight: 600;
@@ -23,6 +27,14 @@ body {
     padding: 30px;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.nested-container {
+    background: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
 }
 
 /* Rec page */
@@ -513,4 +525,21 @@ text-align: center;
     margin-right: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
+}
+
+.list-item {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  align-items: center;
+  padding: 8px 0;
+  gap: 12px;
+}
+
+.rank {
+  text-align: left;
+  font-weight: bold;
+}
+
+.name {
+  text-align: left;
 }
